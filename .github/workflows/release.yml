@@ -103,16 +103,13 @@ jobs:
 
       - name: Generate Dalamud repo JSON
         if: startsWith(github.ref, 'refs/tags/v')
-        run: python3 scripts/write-plugin-repo.py --tag "$GITHUB_REF_NAME" --output repo.json
+        run: python3 scripts/write-plugin-repo.py --tag "$GITHUB_REF_NAME" --output "$RUNNER_TEMP/repo.json"
 
       - name: Publish Dalamud repo JSON
         if: startsWith(github.ref, 'refs/tags/v')
         shell: bash
         run: |
           set -euo pipefail
-
-          tmpdir="$(mktemp -d)"
-          cp repo.json "$tmpdir/repo.json"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -126,7 +123,7 @@ jobs:
 
           git rm -rf . || true
 
-          cp "$tmpdir/repo.json" repo.json
+          cp "$RUNNER_TEMP/repo.json" repo.json
           git add repo.json
           git commit -m "Update Dalamud plugin repository for $GITHUB_REF_NAME" || exit 0
           git push origin gh-pages
