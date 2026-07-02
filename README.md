@@ -1,47 +1,114 @@
-# SamplePlugin
+# Ultrawide Cutscenes
 
-Simple example plugin for Dalamud.
+Dalamud plugin that removes the letterboxing bars shown during cutscenes on ultrawide monitors.
 
-This is not designed to be the simplest possible example, but it is also not designed to cover everything you might want to do. For more detailed questions, come ask in [the Discord](https://discord.gg/3NMcUV5).
+This repository is a maintained fork. Use this fork for current builds:
 
-## Main Points
+```sh
+git clone https://github.com/mihaiflorentin88/Dalamud.FullscreenCutscenes.git
+cd Dalamud.FullscreenCutscenes
+```
 
-* Simple functional plugin
-  * Slash command
-  * Main UI
-  * Settings UI
-  * Image loading
-  * Plugin json
-* Simple, slightly-improved plugin configuration handling
-* Project organization
-  * Copies all necessary plugin files to the output directory
-    * Does not copy dependencies that are provided by dalamud
-    * Output directory can be zipped directly and have exactly what is required
-  * Hides data files from visual studio to reduce clutter
-    * Also allows having data files in different paths than VS would usually allow if done in the IDE directly
+## Normal Install
 
+After a tagged release has been published, install the plugin through Dalamud by adding this custom repository URL:
 
-The intention is less that any of this is used directly in other projects, and more to show how similar things can be done.
+```text
+https://raw.githubusercontent.com/mihaiflorentin88/Dalamud.FullscreenCutscenes/gh-pages/repo.json
+```
 
-## To Use
-### Building
+1. Launch the game.
+2. Open Dalamud settings with `/xlsettings`.
+3. Go to `Experimental`.
+4. Add the URL above to `Custom Plugin Repositories`.
+5. Save and close settings.
+6. Open the plugin installer with `/xlplugins`.
+7. Search for `Ultrawide Cutscenes`.
+8. Install and enable it.
 
-1. Open up `SamplePlugin.sln` in your C# editor of choice (likely [Visual Studio 2022](https://visualstudio.microsoft.com) or [JetBrains Rider](https://www.jetbrains.com/rider/)).
-2. Build the solution. By default, this will build a `Debug` build, but you can switch to `Release` in your IDE.
-3. The resulting plugin can be found at `SamplePlugin/obj/x64/Debug/SamplePlugin.dll` (or `Release` if appropriate.)
+## Development Install
 
-### Activating in-game
+Use this flow when testing local changes before pushing a release.
 
-1. Launch the game and use `/xlsettings` in chat or `xlsettings` in the Dalamud Console to open up the Dalamud settings.
-    * In here, go to `Experimental`, and add the full path to the `SamplePlugin.dll` to the list of Dev Plugin Locations.
-2. Next, use `/xlplugins` (chat) or `xlplugins` (console) to open up the Plugin Installer.
-    * In here, go to `Dev Tools > Installed Dev Plugins`, and the `SamplePlugin` should be visible. Enable it.
-3. You should now be able to use `/pmycommand` (chat) or `pmycommand` (console)!
+Requirements:
 
-Note that you only need to add it to the Dev Plugin Locations once (Step 1); it is preserved afterwards. You can disable, enable, or load your plugin on startup through the Plugin Installer.
+- Docker
+- XIVLauncher with Dalamud enabled
 
-### Reconfiguring for your own uses
+Build the Docker build environment:
 
-Basically, just replace all references to `SamplePlugin` in all of the files and filenames with your desired name. You'll figure it out 😁
+```sh
+docker build -t dalamud-fullscreen-cutscenes-build .
+```
 
-Dalamud will load the JSON file (by default, `Data/SamplePlugin.json`) next to your DLL and use it for metadata, including the description for your plugin in the Plugin Installer. Make sure to update this with information relevant to _your_ plugin!
+Build the plugin and write the output into `./artifacts`:
+
+```sh
+mkdir -p artifacts
+docker run --rm \
+  --user "$(id -u):$(id -g)" \
+  -e HOME=/tmp \
+  -v "$PWD:/src" \
+  -v "$HOME/.xlcore/dalamud/Hooks/dev:/dalamud:ro" \
+  -v "$PWD/artifacts:/out" \
+  dalamud-fullscreen-cutscenes-build
+```
+
+If your Dalamud dev files are somewhere else, change the second volume mount to point at the directory that contains `Dalamud.dll`.
+
+Install the local build:
+
+1. Launch the game.
+2. Open Dalamud settings with `/xlsettings`.
+3. Go to `Experimental`.
+4. Add the full path to `artifacts/Dalamud.FullscreenCutscenes.dll` to `Dev Plugin Locations`.
+5. Open the plugin installer with `/xlplugins`.
+6. Go to `Dev Tools` > `Installed Dev Plugins`.
+7. Enable `Ultrawide Cutscenes`.
+
+## Releasing
+
+GitHub Actions builds the plugin on pull requests and pushes to `main`. It publishes installable Dalamud releases only for version tags.
+
+Before publishing:
+
+1. Update `<Version>` in `Dalamud.FullscreenCutscenes/Dalamud.FullscreenCutscenes.csproj`.
+2. Commit the changes locally when ready.
+3. Push the branch to GitHub.
+4. Create and push a matching tag:
+
+```sh
+git tag v1.0.0.4
+git push origin v1.0.0.4
+```
+
+The tag version must match the csproj version. For example, tag `v1.0.0.4` requires `<Version>1.0.0.4</Version>`.
+
+The release workflow will:
+
+- build the plugin against Dalamud API 15;
+- upload `latest.zip` to the GitHub Release;
+- publish `repo.json` to the `gh-pages` branch for Dalamud installs.
+
+The repository must allow GitHub Actions to write releases and branches:
+
+`Settings` > `Actions` > `General` > `Workflow permissions` > `Read and write permissions`.
+
+## Usage
+
+Toggle the plugin:
+
+```text
+/pcutscenes
+```
+
+Explicitly enable or disable it:
+
+```text
+/pcutscenes true
+/pcutscenes false
+```
+
+## Notes
+
+This plugin intentionally changes how cutscenes are framed. You may see things outside the intended camera view, including hidden actors, objects loading in, or animation states that are normally covered by letterboxing.

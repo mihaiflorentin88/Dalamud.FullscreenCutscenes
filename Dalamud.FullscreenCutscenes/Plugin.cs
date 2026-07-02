@@ -1,66 +1,53 @@
 ﻿using System.Runtime.InteropServices;
 using Dalamud.Game.Command;
-using Dalamud.Plugin;
-using Dalamud.Game;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Hooking;
+using Dalamud.IoC;
+using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 
 namespace Dalamud.FullscreenCutscenes
 {
     public sealed class Plugin : IDalamudPlugin
     {
-        public string Name => "Ultrawide Cutscenes";
-
-        private const string commandName = "/pcutscenes";
+        private const string CommandName = "/pcutscenes";
 
         private delegate nint UpdateLetterboxingDelegate(nint thisPtr);
 
+        [PluginService] private static IDalamudPluginInterface PluginInterface { get; set; } = null!;
+        [PluginService] private static ICommandManager CommandManager { get; set; } = null!;
+        [PluginService] private static ISigScanner SigScanner { get; set; } = null!;
+        [PluginService] private static IGameInteropProvider GameInteropProvider { get; set; } = null!;
+        [PluginService] private static ICondition Condition { get; set; } = null!;
+
         private Hook<UpdateLetterboxingDelegate>? updateLetterboxingHook;
 
-        private IDalamudPluginInterface PluginInterface { get; init; }
-        private ICommandManager CommandManager { get; init; }   
         private Configuration Configuration { get; init; }
-        private ICondition Condition { get; init; }
-        public Plugin(
-             IDalamudPluginInterface pluginInterface,
-             ICommandManager commandManager,
-             ISigScanner targetScanner,
-             IGameInteropProvider gameInteropProvider,
-             ICondition condition)
+
+        public Plugin()
         {
-            this.PluginInterface = pluginInterface;
-            this.CommandManager = commandManager;
-            this.Condition = condition;
+            this.Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+            this.Configuration.Initialize(PluginInterface);
 
-            this.Configuration = this.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
-            this.Configuration.Initialize(this.PluginInterface);
-
-            // you might normally want to embed resources and load them from the manifest stream
-            //this.PluginUi = new PluginUI(this.Configuration, goatImage);
-
-            this.CommandManager.AddHandler(commandName, new CommandInfo(OnCommand)
+            CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
             {
-                HelpMessage = "A useful message to display in /xlhelp"
+                HelpMessage = "Toggle ultrawide cutscene letterboxing."
             });
 
-            if (targetScanner.TryScanText("E8 ?? ?? ?? ?? 48 8B 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 8B 8B ?? ?? ?? ??", out var ptr))
+            if (SigScanner.TryScanText("E8 ?? ?? ?? ?? 48 8B 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 8B 8B ?? ?? ?? ??", out var ptr))
             {
-                this.updateLetterboxingHook = gameInteropProvider.HookFromAddress<UpdateLetterboxingDelegate>(ptr, UpdateLetterboxingDetour);
+                this.updateLetterboxingHook = GameInteropProvider.HookFromAddress<UpdateLetterboxingDelegate>(ptr, UpdateLetterboxingDetour);
                 this.updateLetterboxingHook.Enable();
             }
-
-            //this.PluginInterface.UiBuilder.Draw += DrawUI;
-            //this.PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
         }
 
         private unsafe nint UpdateLetterboxingDetour(nint thisptr)
         {
             bool isWatchingCutscene = Condition[ConditionFlag.OccupiedInCutSceneEvent] ||
-                                      Condition[ConditionFlag.WatchingCutscene78];
+                                      Condition[ConditionFlag.WatchingCutscene];
             if (this.Configuration.IsEnabled && isWatchingCutscene)
             {
-                SomeConfig* config = (SomeConfig*) thisptr;
+                SomeConfig* config = (SomeConfig*)thisptr;
                 config->ShouldLetterBox &= ~(1 << 5);
             }
 
@@ -70,7 +57,7 @@ namespace Dalamud.FullscreenCutscenes
         public void Dispose()
         {
             this.updateLetterboxingHook?.Disable();
-            this.CommandManager.RemoveHandler(commandName);
+            CommandManager.RemoveHandler(CommandName);
         }
 
         private void OnCommand(string command, string args)
@@ -86,7 +73,7 @@ namespace Dalamud.FullscreenCutscenes
 
             this.Configuration.Save();
         }
-        
+
         [StructLayout(LayoutKind.Explicit)]
         public partial struct SomeConfig
         {

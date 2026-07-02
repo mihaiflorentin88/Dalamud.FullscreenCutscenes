@@ -2,4 +2,7 @@
 .idea/
 obj/
 bin/
+artifacts/
+__pycache__/
+*.pyc
 *.user

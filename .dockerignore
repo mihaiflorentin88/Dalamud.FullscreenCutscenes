@@ -1,0 +1,9 @@
+.git
+.vs
+.idea
+bin
+obj
+artifacts
+**/bin
+**/obj
+*.user
