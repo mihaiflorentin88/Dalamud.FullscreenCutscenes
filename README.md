@@ -23,7 +23,7 @@ https://raw.githubusercontent.com/mihaiflorentin88/Dalamud.FullscreenCutscenes/g
 4. Add the URL above to `Custom Plugin Repositories`.
 5. Save and close settings.
 6. Open the plugin installer with `/xlplugins`.
-7. Search for `Ultrawide Cutscenes`.
+7. Search for `Ultrawide Cutscenes Fork`.
 8. Install and enable it.
 
 ## Development Install
@@ -61,10 +61,10 @@ Install the local build:
 1. Launch the game.
 2. Open Dalamud settings with `/xlsettings`.
 3. Go to `Experimental`.
-4. Add the full path to `artifacts/Dalamud.FullscreenCutscenes.dll` to `Dev Plugin Locations`.
+4. Add the full path to `artifacts/Dalamud.FullscreenCutscenes.MihaiFork.dll` to `Dev Plugin Locations`.
 5. Open the plugin installer with `/xlplugins`.
 6. Go to `Dev Tools` > `Installed Dev Plugins`.
-7. Enable `Ultrawide Cutscenes`.
+7. Enable `Ultrawide Cutscenes Fork`.
 
 ## Releasing
 
@@ -89,6 +89,8 @@ The release workflow will:
 - build the plugin against Dalamud API 15;
 - upload `latest.zip` to the GitHub Release;
 - publish `repo.json` to the `gh-pages` branch for Dalamud installs.
+
+This fork intentionally uses the unique internal plugin name `Dalamud.FullscreenCutscenes.MihaiFork`. Dalamud filters third-party repositories that try to override an official plugin's `InternalName`, so this must not be changed back to `Dalamud.FullscreenCutscenes`.
 
 The repository must allow GitHub Actions to write releases and branches:
 

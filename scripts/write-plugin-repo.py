@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 PROJECT_PATH = Path("Dalamud.FullscreenCutscenes/Dalamud.FullscreenCutscenes.csproj")
-MANIFEST_PATH = Path("Dalamud.FullscreenCutscenes/Dalamud.FullscreenCutscenes.json")
+MANIFEST_PATH = Path("Dalamud.FullscreenCutscenes/Dalamud.FullscreenCutscenes.MihaiFork.json")
 PLUGIN_ZIP_NAME = "latest.zip"
 DALAMUD_API_LEVEL = 15
 
@@ -49,6 +49,7 @@ def main() -> None:
         "Description": manifest["Description"],
         "InternalName": manifest["InternalName"],
         "AssemblyVersion": version,
+        "TestingAssemblyVersion": version,
         "RepoUrl": repo_url,
         "ApplicableVersion": manifest.get("ApplicableVersion", "any"),
         "DalamudApiLevel": DALAMUD_API_LEVEL,
@@ -60,6 +61,12 @@ def main() -> None:
         "DownloadLinkInstall": download_url,
         "DownloadLinkTesting": download_url,
         "DownloadLinkUpdate": download_url,
+        "LoadPriority": 0,
+        "LoadRequiredState": 0,
+        "LoadSync": False,
+        "CanUnloadAsync": False,
+        "SupportsProfiles": True,
+        "ImageUrls": None,
         "IconUrl": f"https://raw.githubusercontent.com/{args.repository}/main/Dalamud.FullscreenCutscenes/icon.png",
         "Tags": manifest.get("Tags", []),
     }

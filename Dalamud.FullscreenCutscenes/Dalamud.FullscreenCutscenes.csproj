@@ -3,7 +3,8 @@
   <PropertyGroup>
     <Authors></Authors>
     <Company></Company>
-    <Version>1.0.0.4</Version>
+    <Version>1.0.0.5</Version>
+    <AssemblyName>Dalamud.FullscreenCutscenes.MihaiFork</AssemblyName>
     <Description>Remove letterboxing from cutscenes on ultrawide monitors.</Description>
     <Copyright></Copyright>
     <PackageProjectUrl>https://github.com/mihaiflorentin88/Dalamud.FullscreenCutscenes</PackageProjectUrl>
